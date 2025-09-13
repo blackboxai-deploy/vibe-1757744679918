@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Image to Video</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .form-group { margin: 10px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea, select, button { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Test Image to Video API</h1>
+    
+    <form id="testForm">
+        <div class="form-group">
+            <label for="image">Select Image:</label>
+            <input type="file" id="image" name="image" accept="image/*" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="prompt">Animation Description:</label>
+            <textarea id="prompt" name="prompt" placeholder="Describe how the image should be animated..." required></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="duration">Duration (seconds):</label>
+            <select id="duration" name="duration">
+                <option value="3">3 seconds</option>
+                <option value="5" selected>5 seconds</option>
+                <option value="7">7 seconds</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="aspectRatio">Aspect Ratio:</label>
+            <select id="aspectRatio" name="aspectRatio">
+                <option value="16:9" selected>16:9 (Landscape)</option>
+                <option value="9:16">9:16 (Portrait)</option>
+                <option value="1:1">1:1 (Square)</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="quality">Quality:</label>
+            <select id="quality" name="quality">
+                <option value="HD" selected>HD (1080p)</option>
+                <option value="4K">4K (Ultra HD)</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="style">Style:</label>
+            <select id="style" name="style">
+                <option value="realistic" selected>Realistic</option>
+                <option value="cinematic">Cinematic</option>
+                <option value="animated">Animated</option>
+                <option value="artistic">Artistic</option>
+            </select>
+        </div>
+        
+        <button type="submit">Generate Video</button>
+    </form>
+    
+    <div id="result" class="result" style="display: none;">
+        <h3>Result:</h3>
+        <div id="resultContent"></div>
+    </div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const image = document.getElementById('image').files[0];
+            const prompt = document.getElementById('prompt').value;
+            const duration = document.getElementById('duration').value;
+            const aspectRatio = document.getElementById('aspectRatio').value;
+            const quality = document.getElementById('quality').value;
+            const style = document.getElementById('style').value;
+            
+            formData.append('image', image);
+            formData.append('prompt', prompt);
+            formData.append('duration', duration);
+            formData.append('aspectRatio', aspectRatio);
+            formData.append('quality', quality);
+            formData.append('style', style);
+            formData.append('mode', 'image-to-video');
+            
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultDiv.style.display = 'block';
+            resultContent.innerHTML = '<p>Generating video... This may take several minutes.</p>';
+            
+            try {
+                const response = await fetch('/api/generate-video', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultContent.innerHTML = `
+                        <p><strong>Success!</strong></p>
+                        <p><strong>Video URL:</strong> <a href="${result.url}" target="_blank">${result.url}</a></p>
+                        <video controls width="400">
+                            <source src="${result.url}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    `;
+                } else {
+                    resultContent.innerHTML = `<p><strong>Error:</strong> ${result.error}</p>`;
+                }
+            } catch (error) {
+                resultContent.innerHTML = `<p><strong>Error:</strong> ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
